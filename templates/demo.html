@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-main>
+                <v-container>
+                    <v-fade-transition mode="out-in">
+                        <v-card>
+                            <template>
+                                <v-file-input show-size counter multiple small-chips accept="image/*" label="File input"
+                                    v-model="fileList" ref="fileInput" @change="uploadFile"></v-file-input>
+                            </template>
+                            <template>
+                                <div>
+                                  <v-progress-linear
+                                    color="light-blue"
+                                    height="10"
+                                    v-model="uploadPercentage"
+                                    striped
+                                    v-show="progressShow"
+                                  ></v-progress-linear>
+                                </div>
+                              </template>
+                            <v-img src="https://picsum.photos/350/165?random" max-height="125" contain
+                                class="grey lighten-5"></v-img>
+                            <template>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="6" md="4">
+                                            <v-text-field value="0f0f0b0f0f0f030f.png" disabled>
+                                                <v-icon style="font-size:14px; margin-top:5px" slot="prepend"
+                                                    color="blue">
+                                                    Filename
+                                                </v-icon>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-col cols="6" md="4">
+                                            <v-text-field value="0.98" disabled>
+                                                <v-icon style="font-size:15px; margin-top:5px" slot="prepend"
+                                                    color="blue">
+                                                    Confidence
+                                                </v-icon>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-spacer></v-spacer>
+                                        <v-col cols="4" md="4" class="d-flex justify-end">
+                                            <v-btn x-small fab color="primary" @click="copyToClipboard">
+                                                <v-icon>
+                                                    mdi-comment-question-outline
+                                                </v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                        <v-col cols="4" md="8">
+                                            <v-form>
+                                                <v-text-field counter="45" hint="length could not max 45"
+                                                    label="OCR Value" value="something value xxxxxx" outlined autofocus>
+                                                </v-text-field>
+                                            </v-form>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </template>
+                        </v-card>
+                    </v-fade-transition>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data() {
+                return {
+                    fileList: [],
+                    uploadPercentage: 0,
+                    progressShow: false
+                }
+            },
+            methods: {
+                copyToClipboard() {
+                    alert('you clicked copy function')
+                },
+                nextPicture(){
+
+                },
+                uploadFile(e) {
+                    let files = this.fileList
+                    if (files.length > 0) {
+                        let fileSize = 0
+                        let data = new FormData();
+                        for (let i = 0; i < files.length; i++) {
+                            fileSize += files[i].size
+                            data.append('file', files[i])
+                        }
+                        this.progressShow = true
+                        axios.post('http://127.0.0.1:5000/upload', data, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Access-Control-Allow-Origin': '*'
+                            },
+                            onUploadProgress: progressEvent => {
+                                this.uploadPercentage = (progressEvent.loaded/fileSize) * 100
+                            }
+                        }).then(res => {
+                            this.fileList = []
+                            this.progressShow = false
+                            console.log(res);
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
+<!-- copy filename-->
