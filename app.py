@@ -2,8 +2,10 @@ import json
 from flask_cors import CORS
 from flask import Flask, request, render_template, send_from_directory, make_response
 from dbHelper import DBHelper
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -14,6 +16,7 @@ def upload():
         for f in files:
             f.save(f'./static/images/upload/{f.filename}')
     return 'upload success'
+
 
 @app.route("/nextPicture")
 def next_picture():
@@ -35,6 +38,7 @@ def next_picture():
     db.close()
     return json.dumps(data)
 
+
 @app.route("/delete")
 def delete():
     args = request.args
@@ -52,6 +56,7 @@ def delete():
         }
     db.close()
     return json.dumps(data)
+
 
 @app.route("/dashboard")
 def dashboard():
@@ -71,6 +76,7 @@ def dashboard():
     db.close()
     return json.dumps(data)
 
+
 @app.route("/download")
 def download():
     db = DBHelper()
@@ -82,9 +88,11 @@ def download():
     response.headers["Content-Disposition"] = "attachment; filename={}".format(filename.encode().decode('latin-1'))
     return response
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 if __name__ == '__main__':
     # TODO upload file to backend call paddleOCR
