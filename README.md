@@ -7,8 +7,8 @@ Annotation tool for OCR recognition model
 4. 在界面上可以进行标注，导出标注结果
 
 
-![图片alt](static/images/image.png "image")
+![图片alt](./static/images/image.png "image")
 
-![图片alt](static/images/image1.png "image")
+![图片alt](./static/images/image1.png "image")
 
 
