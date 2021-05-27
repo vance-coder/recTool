@@ -1,433 +1,342 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcss.com/qs/6.5.1/qs.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
+
 <body>
-<div id="app">
-    <v-app>
-        <v-main>
-            <v-container>
+    <div id="app">
+        <v-app>
+            <v-main>
+                <v-container style="margin-top: 100px">
 
-                <v-dialog
-                        v-model="dialog"
-                        max-width="580"
-                >
-                    <v-card>
-                        <v-card-title class="grey lighten-2 headline">
-                            Shortcut Key:
-                        </v-card-title>
+                    <v-dialog v-model="dialog" max-width="580">
+                        <v-card>
+                            <v-card-title class="grey lighten-2 headline">
+                                快捷键说明:
+                            </v-card-title>
+                            <v-card-text>
+                                <v-simple-table>
+                                    <template>
+                                        <thead>
+                                            <tr>
+                                                <th class="text-left">
+                                                    Key
+                                                </th>
+                                                <th class="text-left">
+                                                    Function
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>E / SPACE</td>
+                                                <td>进入编辑模式 (刷新页面默认就是编辑模式)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>X</td>
+                                                <td>删除当前图片</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ENTER</td>
+                                                <td>保存标注结果并且显示下一张图片</td>
+                                            </tr>
+                                            <tr>
+                                                <td>P</td>
+                                                <td>当前图片将会被Pending</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ESC</td>
+                                                <td>退出编辑模式（E/SPACE可以重新进入）</td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
 
-                        <v-card-text>
+                            </v-card-text>
+                            <v-divider></v-divider>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="primary" text @click="dialog = false">
+                                    OK
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                    <v-dialog v-model="dialog2" max-width="920">
+                        <v-card>
+                            <v-img :src="parentImgSrc">
+                            </v-img>
+                        </v-card>
+                    </v-dialog>
 
-                            <v-simple-table>
-                                <template>
-                                    <thead>
-                                    <tr>
-                                        <th class="text-left">
-                                            Key
-                                        </th>
-                                        <th class="text-left">
-                                            Function
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr>
-                                        <td>e</td>
-                                        <td>enter edit mode (default enter edit mode when next picture show)</td>
-                                    </tr>
-                                    <tr>
-                                        <td>x</td>
-                                        <td>delete current picture</td>
-                                    </tr>
-                                    <tr>
-                                        <td>enter</td>
-                                        <td>show next picture and save currect picture's annotation results</td>
-                                    </tr>
-                                    <tr>
-                                        <td>left</td>
-                                        <td>show previous picture</td>
-                                    </tr>
-                                    <tr>
-                                        <td>right</td>
-                                        <td>show next picture</td>
-                                    </tr>
-                                    </tbody>
-                                </template>
-                            </v-simple-table>
+                    <v-dialog v-model="dialogConfirm" max-width="290" ref="confirmDialog">
+                        <v-card>
+                            <v-card-title class="red lighten-4 headline">
+                                Warning ! ! !
+                            </v-card-title>
+                            <v-card-text>
+                                It will delete current picture, are you sure want to do this?
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="green darken-1" text @click="dialogConfirm = false">
+                                    Cancel
+                                </v-btn>
+                                <v-btn color="red darken-1" text @click="deletePic" input-value="true">
+                                    Yes
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
 
-                        </v-card-text>
-                        <v-divider></v-divider>
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                                    color="primary"
-                                    text
-                                    @click="dialog = false"
-                            >
-                                I got it
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
+                    <v-fade-transition mode="out-in">
+                        <v-card>
 
-                <v-dialog
-                        v-model="dialogConfirm"
-                        max-width="290"
-                        ref="confirmDialog"
-                >
-                    <v-card>
-                        <v-card-title class="red lighten-4 headline">
-                            Warning ! ! !
-                        </v-card-title>
-                        <v-card-text>
-                            It will delete current picture, are you sure want to do this?
-                        </v-card-text>
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                                    color="green darken-1"
-                                    text
-                                    @click="dialogConfirm = false"
-                            >
-                                Cancel
-                            </v-btn>
-                            <v-btn
-                                    color="red darken-1"
-                                    text
-                                    @click="deletePic"
-                                    input-value="true"
-                            >
-                                Yes
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
+                            <template>
+                                <v-bottom-navigation v-model="topValue" color="blue" grow class="mb-5">
+                                    <v-btn>
+                                        <span v-text="'TODO: ' + todo"></span>
+                                        <v-icon>mdi-beaker-outline</v-icon>
+                                    </v-btn>
 
-                <v-fade-transition mode="out-in">
-                    <v-card>
-                        <template>
-                            <v-stepper v-model="e1">
-                                <v-stepper-header>
-                                    <v-stepper-step
-                                            :complete="e1 > 1"
-                                            step="1"
-                                    >
-                                        Select file
-                                    </v-stepper-step>
+                                    <v-btn>
+                                        <span v-text="'CHECKED: '+checked">Favorites</span>
+                                        <v-icon>mdi-beaker-check-outline</v-icon>
+                                    </v-btn>
 
-                                    <v-divider></v-divider>
+                                    <v-btn>
+                                        <span v-text="'PENDING: '+pending">Nearby</span>
+                                        <v-icon>mdi-beaker-question-outline</v-icon>
+                                    </v-btn>
+                                </v-bottom-navigation>
+                            </template>
 
-                                    <v-stepper-step
-                                            :complete="e1 > 2"
-                                            step="2"
-                                    >
-                                        File uploading
-                                    </v-stepper-step>
-
-                                    <v-divider></v-divider>
-
-                                    <v-stepper-step step="3">
-                                        File processing
-                                    </v-stepper-step>
-                                </v-stepper-header>
-
-                                <v-stepper-items>
-                                    <v-stepper-content step="1">
-                                        <div
-                                                class="mb-12"
-                                        >
-                                            <template>
-                                                <v-file-input
-                                                        show-size
-                                                        counter
-                                                        multiple
-                                                        small-chips
-                                                        accept="image/*"
-                                                        label="File input"
-                                                        v-model="fileList"
-                                                        ref="fileInput"
-                                                        @change="uploadFile"
-                                                ></v-file-input>
-                                            </template>
-
-                                        </div>
-
-                                        <v-btn
-                                                color="primary"
-                                                @click="e1 = 2"
-                                        >
-                                            Continue
-                                        </v-btn>
-
-                                        <v-btn text>
-                                            Cancel
-                                        </v-btn>
-                                    </v-stepper-content>
-
-                                    <v-stepper-content step="2">
-                                        <div
-                                                class="mb-12"
-                                                height="200px"
-                                        >
-                                            <template>
-                                                <div>
-                                                    <v-progress-linear
-                                                            color="light-blue"
-                                                            height="10"
-                                                            v-model="uploadPercentage"
-                                                            striped
-                                                    ></v-progress-linear>
-                                                </div>
-                                            </template>
-
-                                        </div>
-
-                                        <v-btn
-                                                color="primary"
-                                                @click="e1 = 3"
-                                        >
-                                            Continue
-                                        </v-btn>
-
-                                        <v-btn text>
-                                            Cancel
-                                        </v-btn>
-                                    </v-stepper-content>
-
-                                    <v-stepper-content step="3">
-                                        <div
-                                                class="mb-12"
-                                                height="200px"
-                                        >
-
-                                            <template>
-                                                <div class="text-center">
-                                                    <v-progress-circular
-                                                            :rotate="-90"
-                                                            :size="100"
-                                                            :width="15"
-                                                            color="primary"
-                                                    >
-                                                        80
-                                                    </v-progress-circular>
-
-                                                </div>
-                                            </template>
-
-                                        </div>
-
-                                        <v-btn
-                                                color="primary"
-                                                @click="e1 = 1"
-                                        >
-                                            Continue
-                                        </v-btn>
-
-                                        <v-btn text>
-                                            Cancel
-                                        </v-btn>
-                                    </v-stepper-content>
-                                </v-stepper-items>
-                            </v-stepper>
-                        </template>
-
-                        <template>
-                            <div class="text-center">
-
-                                <v-chip
-                                        class="ma-2"
-                                        color="primary"
-                                        text-color="white"
-                                >
-                                    1 Year
-                                    <v-icon right>
-                                        mdi-cake-variant
-                                    </v-icon>
-                                </v-chip>
-
-                                <v-chip
-                                        class="ma-2"
-                                        color="green"
-                                        text-color="white"
-                                >
-                                    <v-avatar
-                                            left
-                                            class="green darken-4"
-                                    >
-                                        1
-                                    </v-avatar>
-                                    Years
-                                </v-chip>
-
-                            </div>
-                        </template>
-
-                        <v-img
-                                :src="imgSrc"
-                                max-height="125"
-                                contain
-                                class="grey lighten-5"
-                        ></v-img>
-                        <template>
-                            <v-container>
-                                <v-row>
-                                    <v-col cols="6" md="4">
-                                        <v-text-field v-model="filename" disabled>
-                                            <v-icon
-                                                    style="font-size:14px; margin-top:5px"
-                                                    slot="prepend"
+                            <template>
+                                <div style="height: 100px;">
+                                    <v-img :src="imgSrc" max-height="100" :height="imgHeight" contain
+                                        class="grey lighten-5"></v-img>
+                                </div>
+                                <v-slider v-model="imgHeight" class="align-self-stretch" min="32" max="100" step="1">
+                                </v-slider>
+                            </template>
+                            <template>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="6" md="3">
+                                            <v-text-field v-model="parentImage" disabled>
+                                                <v-icon style="font-size:14px; margin-top:5px" slot="prepend"
                                                     color="blue">
-                                                Filename
-                                            </v-icon>
-                                        </v-text-field>
-                                    </v-col>
-                                    <v-col cols="6" md="4">
-                                        <v-text-field v-model="accuracy" disabled>
-                                            <v-icon
-                                                    style="font-size:15px; margin-top:5px"
-                                                    slot="prepend"
+                                                    ParentImageName
+                                                </v-icon>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-col cols="6" md="3">
+                                            <v-text-field v-model="filename" disabled>
+                                                <v-icon style="font-size:14px; margin-top:5px" slot="prepend"
                                                     color="blue">
-                                                Confidence
-                                            </v-icon>
-                                        </v-text-field>
-                                    </v-col>
-                                    <v-spacer></v-spacer>
-                                    <v-col cols="4" md="4" class="d-flex justify-end">
-                                        <v-btn x-small fab color="primary" @click.stop="dialog = true">
-                                            <v-icon>
-                                                mdi-comment-question-outline
-                                            </v-icon>
-                                        </v-btn>
-                                    </v-col>
-                                    <v-col cols="4" md="8">
-                                        <v-form @submit.prevent="() => false">
-                                            <v-text-field counter="45"
-                                                          hint="OCR Value maybe you need to correct"
-                                                          label="OCR Value"
-                                                          :rules="inputRules"
-                                                          v-model="inputValue"
-                                                          ref="valueInput"
-                                                          outlined
-                                                          autofocus
-                                                          @keyup.enter="inputSubmit"
-                                                          @blur="inputFocus = false"
-                                                          @focus="inputFocus = true"
-                                            ></v-text-field>
-                                        </v-form>
-                                    </v-col>
-                                </v-row>
-                            </v-container>
-                        </template>
-                    </v-card>
-                </v-fade-transition>
-            </v-container>
-        </v-main>
-    </v-app>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    new Vue({
-      el: '#app',
-      vuetify: new Vuetify(),
-      mounted () {
-            document.addEventListener('keyup', (e) => {
-              // console.log(e.keyCode)
-              // Press 'e' or 'spacebar' to enter edit mode
-              if ((e.keyCode == 32 || (e.keyCode == 69)) && this.inputFocus == false){
-                    this.$refs.valueInput.focus()
-              }
-              // Press 'esc' to exit edit mode
-              else if(e.keyCode == 27 && this.inputFocus == true){
-                    this.$refs.valueInput.blur()
-              }
-              // Press 'x' or 'delete/backspace' to delete current picture
-              else if((e.keyCode == 8 || e.keyCode == 88) && this.inputFocus == false){
-                    // Confirm with the user before deleting
-                    this.dialogConfirm = true
-              }
-              else if(e.keyCode == 13 && this.dialogConfirm){
-                    // confirm to delete pic
-                    this.dialogConfirm = false
-                    this.deletePic()
-              }
+                                                    Filename
+                                                </v-icon>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-col cols="6" md="3">
+                                            <v-text-field v-model="confidence" disabled>
+                                                <v-icon style="font-size:15px; margin-top:5px" slot="prepend"
+                                                    color="blue">
+                                                    Confidence
+                                                </v-icon>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-spacer></v-spacer>
+                                        <v-col cols="4" md="3" class="d-flex justify-end">
+                                            <v-btn class="mr-2" x-small fab color="primary"
+                                                @click.stop="dialog2 = true">
+                                                <v-icon>
+                                                    mdi-credit-card-scan
+                                                </v-icon>
+                                            </v-btn>
+                                            <v-btn class="mr-2" x-small fab color="primary" @click.stop="exportRes">
+                                                <v-icon>
+                                                    mdi-arrow-down-circle-outline
+                                                </v-icon>
+                                            </v-btn>
+                                            <v-btn x-small fab color="primary" @click.stop="dialog = true">
+                                                <v-icon>
+                                                    mdi-comment-question-outline
+                                                </v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                        <v-col cols="4" md="8">
+                                            <v-form @submit.prevent="() => false">
+                                                <v-text-field counter="45" hint="OCR Value maybe you need to correct"
+                                                    label="OCR Value" :rules="inputRules" v-model="inputValue"
+                                                    ref="valueInput" outlined autofocus @keyup.enter="inputSubmit"
+                                                    @blur="inputFocus = false" @focus="inputFocus = true">
+                                                </v-text-field>
+                                            </v-form>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </template>
+                        </v-card>
+                    </v-fade-transition>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
 
-           })
-       },
-      data () {
-        return {
-            e1: 1,
-            inputValue: 'ocr value lalalalalal ',
-            filename: '0f0f0b0f0f0f030f.png',
-            accuracy: '0.98',
-            dialog: false,
-            inputFocus: false,
-            dialogConfirm: false,
-            imgSrc: 'https://picsum.photos/350/165?random',
-            fileList: [],
-            uploadPercentage: 0,
-            inputRules: [v => v.length <= 45 || 'Length could not max 45, you could enter X to delete current picture'],
-        }
-      },
-      methods: {
-        inputSubmit () {
-            console.log(this.inputValue)
-            this.nextPicture()
-            // send something to the backend
-        },
-        deletePic () {
-            this.dialogConfirm = false
-            console.log('delete the pic la')
-        },
-        nextPicture(){
-            axios.get('http://127.0.0.1:8080/nextPicture', {}, {}).then(res => {
-                    console.log(res);
-                    this.filename = res.data.filename
-                    this.inputValue = res.data.value
-                    this.imgSrc = 'static/images/result/'+res.data.filename
-                }).catch(err => {
-                    console.log(err);
-                })
-        },
-        uploadFile(e) {
-            let files = this.fileList
-            if (files.length > 0) {
-                let fileSize = 0
-                this.e1 = 2
-                let data = new FormData();
-                for (let i = 0; i < files.length; i++) {
-                    fileSize += files[i].size
-                    data.append('file', files[i])
-                }
-                axios.post('http://127.0.0.1:8080/upload', data, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    onUploadProgress: progressEvent => {
-                        this.uploadPercentage = (progressEvent.loaded/fileSize) * 100
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            mounted() {
+                document.addEventListener('keyup', (e) => {
+                    // console.log(e.keyCode)
+                    // Press 'e' or 'spacebar' to enter edit mode
+                    if ((e.keyCode == 32 || (e.keyCode == 69)) && this.inputFocus == false) {
+                        this.$refs.valueInput.focus()
                     }
-                }).then(res => {
-                    this.fileList = []
-                    this.e1 = 3
-                    console.log(res);
-                }).catch(err => {
-                    console.log(err);
-                })
+                    // Press 'esc' to exit edit mode
+                    else if (e.keyCode == 27 && this.inputFocus == true) {
+                        this.$refs.valueInput.blur()
+                    }
+                    // Press 'x' or 'delete/backspace' to delete current picture
+                    else if ((e.keyCode == 8 || e.keyCode == 88) && this.inputFocus == false) {
+                        // Confirm with the user before deleting
+                        this.dialogConfirm = true
+                    }
+                    // Press 'p' to pending current picture
+                    else if ((e.keyCode == 80) && this.inputFocus == false) {
+                        this.nextPicture(true, 2)
+                    }
+                    else if (e.keyCode == 13 && this.dialogConfirm) {
+                        // confirm to delete pic
+                        this.dialogConfirm = false
+                        this.deletePic()
+                    }
+                    else if (e.keyCode == 13) {
+                        // Press 'enter' commit the form
+                        this.inputSubmit()
+                    }
+                    // Press 'up' to show previous picture
+                    else if (e.keyCode == 38) {
+                        console.log(this.topValue)
+                    }
+
+                });
+                this.nextPicture(false, 0);
+            },
+            data() {
+                return {
+                    e1: 1,
+                    todo: 0,
+                    checked: 0,
+                    imgHeight: 66,
+                    pending: 0,
+                    inputValue: '',
+                    parentImage: '',
+                    filename: '',
+                    confidence: '',
+                    dialog: false,
+                    dialog2: false,
+                    inputFocus: false,
+                    dialogConfirm: false,
+                    imgSrc: '',
+                    parentImgSrc: '',
+                    fileList: [],
+                    uploadPercentage: 0,
+                    topValue: 0,
+                    inputRules: [v => v.length <= 45 || 'Length could not max 45, you could enter X to delete current picture'],
+                }
+            },
+            methods: {
+                inputSubmit() {
+                    console.log(this.inputValue)
+                    this.nextPicture(true, 1)
+                },
+                deletePic() {
+                    axios.get('http://127.0.0.1:8080/delete', { params: { filename: this.filename } }, {}).then(res => {
+                        console.log(res.data.message)
+                        this.nextPicture(false, 0)
+                    }).catch(err => {
+                        alert(err)
+                        console.log(err)
+                    })
+                },
+                nextPicture(ifSend, myStatus) {
+                    inputValue = ifSend ? { value: this.inputValue, filename: this.filename, status: myStatus, fetch_status: this.topValue } : {}
+                    axios.get('http://127.0.0.1:8080/nextPicture', { params: inputValue }, {
+                    }).then(res => {
+                        if (res.data.filename == undefined) {
+                            alert('There is no picture la!!!')
+                        }
+                        this.parentImage = res.data.parent
+                        this.filename = res.data.filename
+                        this.inputValue = res.data.value
+                        this.confidence = res.data.confidence
+                        this.imgSrc = 'static/images/result/' + res.data.filename
+                        this.parentImgSrc = 'static/images/upload/' + res.data.parent
+                        this.getDashboard();
+                    }).catch(err => {
+                        alert(err)
+                        console.log(err);
+                    })
+                },
+                uploadFile(e) {
+                    let files = this.fileList
+                    if (files.length > 0) {
+                        let fileSize = 0
+                        this.e1 = 2
+                        let data = new FormData();
+                        for (let i = 0; i < files.length; i++) {
+                            fileSize += files[i].size
+                            data.append('file', files[i])
+                        }
+                        axios.post('http://127.0.0.1:8080/upload', data, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Access-Control-Allow-Origin': '*'
+                            },
+                            onUploadProgress: progressEvent => {
+                                this.uploadPercentage = (progressEvent.loaded / fileSize) * 100
+                            }
+                        }).then(res => {
+                            this.fileList = []
+                            this.e1 = 3
+                            console.log(res);
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    }
+                },
+                getDashboard() {
+                    axios.get('http://127.0.0.1:8080/dashboard', {}, {
+                    }).then(res => {
+                        this.todo = res.data.todo
+                        this.checked = res.data.checked
+                        this.pending = res.data.pending
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                },
+                exportRes() {
+                    window.location.href="http://127.0.0.1:8080/download"
+                }
+
             }
-        }
-      }
-    })
+        })
 
-
-</script>
+    </script>
 </body>
+
 </html>
 <!-- copy filename-->
-<!--enter change next image-->
